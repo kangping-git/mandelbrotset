@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マンデルブロ集合</title>
+    <script src="https://cdn.jsdelivr.net/npm/gpu.js@latest/dist/gpu-browser.min.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            cursor: grab;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        let canvas = document.getElementById('canvas');
+        let mouse = false
+        let x = 0
+        let y = 0
+        let x_ = 0
+        let y_ = 0
+        canvas.addEventListener("mousedown",(e) => {
+            mouse = true
+            x = e.x
+            y = e.y
+            x_ = x__
+            y_ = y__
+            canvas.style.cursor = "grabbing"
+        })
+        canvas.addEventListener("mouseup",() => {
+            mouse = false
+            canvas.style.cursor = ""
+        })
+        canvas.addEventListener("wheel",(e) => {
+            if (e.deltaY < 0){
+                zoom *= 1.1
+            }else{
+                zoom *= 0.9
+            }
+        })
+        canvas.addEventListener("mousemove",(e) => {
+            X = e.x
+            Y = e.y
+            if (mouse){
+                x__ = -(x - e.x)/zoom/2 + x_
+                y__ = (y - e.y)/zoom/2 + y_
+            }
+        })
+        let context = canvas.getContext("2d");
+        let X = 0
+        let Y = 0
+        let n = 5
+        function render(L,x,y,z,w,h){
+            context.fillStyle = "black";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            let imageData = context.createImageData(w, h);
+            let Count = 0
+            for (let x_ = 0;x_ < h;++x_){
+                for (let y_ = 0;y_ < w;++y_){
+                    let ci = (-((x_-w/2)*10 ** n)/z-y*10 ** n);
+                    let cr = (((y_-h/2)*10 ** n)/z-x*10 ** n);
+                    let zr = 0
+                    let zi = 0
+                    let ind = x_ * w + y_
+                    let flg = false
+                    for (let i = 0;i < L;++i){
+                        let tr = ((zr * zr) - (zi * zi) + cr) /10 ** n;
+                        let ti = ((zr * zi * 2) + ci) / 10 ** n;
+                        zr = tr;
+                        zi = ti;
+                        Count += 1
+                        if (zr ** 2 + zi ** 2 > 4 * 10 ** (n * 2)){
+                            flg = true
+                            if (i < L/3){
+                                imageData.data[ind*4] = (i * (256 / (L / 3)))
+                                imageData.data[ind*4+1] = (i * (256 / (L / 3)))
+                                imageData.data[ind*4+2] = 255-(i * (256 / (L / 3)))
+                                imageData.data[ind*4+3] = 255
+                            }else if (i < (L/3)*2){
+                                imageData.data[ind*4] = 255
+                                imageData.data[ind*4+1] = 255-(i-L/3)*(256 / (L / 3))
+                                imageData.data[ind*4+2] = 0
+                                imageData.data[ind*4+3] = 255
+                            }else{
+                                imageData.data[ind*4] = 255
+                                imageData.data[ind*4+1] = (i-(L*2)/3)*(256 / (L / 3))
+                                imageData.data[ind*4+2] = (i-(L*2)/3)*(256 / (L / 3))
+                                imageData.data[ind*4+3] = 255
+                            }
+                            break
+                        }
+                    }
+                    if (flg == false){
+                        imageData.data[ind*4] = 0
+                        imageData.data[ind*4+1] = 0
+                        imageData.data[ind*4+2] = 0
+                        imageData.data[ind*4+3] = 255
+                    }
+                }
+            }
+            context.putImageData(imageData, 0, 0);
+            document.getElementById("LLL").innerText = "計算回数:" + Count
+            document.getElementById("LLLL").innerText = "zoom:" + zoom
+        }
+        let L_ = 0
+        window.addEventListener("keydown",(e) => {
+            if (e.key == " "){
+                if (draw){
+                    w = window.innerWidth
+                    h = window.innerHeight
+                    canvas.width = w
+                    canvas.height = h
+                    canvas.style.width = w + "px"
+                    canvas.style.height = h + "px"
+                    L_ = L
+                    L = 1000
+                    console.log(x__,y__,zoom)
+                    render(L, x__, y__, zoom*2, w, h)
+                    draw = false
+                }
+            }
+            if (e.key == "x"){
+                L -= 1
+            }
+            if (e.key == "z"){
+                L += 1
+            }
+            if (e.key == "5"){
+                L = 50
+            }
+            if (e.key == "0"){
+                L = 1
+                setInterval(() => {
+                    L += 1
+                    document.getElementById("LL").innerText = "L:" + L
+                },1000/10)
+            }
+            if (e.key == "p"){
+                w = window.innerWidth/2
+                h = window.innerHeight/2
+                canvas.width = w
+                canvas.height = h
+                canvas.style.width = w*2 + "px"
+                canvas.style.height = h*2 + "px"
+                L = L_
+                draw = true
+            }
+            document.getElementById("LL").innerText = "L:" + L
+        })
+        let zoom = 100 / (10 ** n)
+        let L = 50
+        let w = window.innerWidth/2
+        let h = window.innerHeight/2
+        canvas.width = w
+        canvas.height = h
+        canvas.style.width = w*2 + "px"
+        canvas.style.height = h*2 + "px"
+        let x__ = 2
+        let y__ = 2
+        let text = ""
+        let draw = true
+        L = 50
+        setInterval(() => {
+            if (draw){
+                render(L, x__, y__, zoom, w, h)
+            }
+        },1000/30)
+        let element = document.createElement("div")
+        element.id = "LL"
+        document.body.appendChild(element)
+        document.getElementById("LL").style.position = "fixed"
+        document.getElementById("LL").style.top = "0px"
+        document.getElementById("LL").style.left = "0px"
+        document.getElementById("LL").style.backgroundColor = "rgba(0,0,0,0.7)"
+        document.getElementById("LL").style.color = "greenyellow"
+        document.getElementById("LL").style.fontSize = "15pt"
+        document.getElementById("LL").style.zIndex = "9".repeat(999)
+        document.getElementById("LL").style.userSelect = "none"
+        document.getElementById("LL").style.textShadow = ""
+        document.getElementById("LL").style.fontFamily = 'BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif;'
+        document.getElementById("LL").innerText = "L:" + L
+        element = document.createElement("div")
+        element.id = "LLL"
+        document.body.appendChild(element)
+        document.getElementById("LLL").style.position = "fixed"
+        document.getElementById("LLL").style.top = "30px"
+        document.getElementById("LLL").style.left = "0px"
+        document.getElementById("LLL").style.backgroundColor = "rgba(0,0,0,0.7)"
+        document.getElementById("LLL").style.color = "greenyellow"
+        document.getElementById("LLL").style.fontSize = "15pt"
+        document.getElementById("LLL").style.zIndex = "9".repeat(999)
+        document.getElementById("LLL").style.userSelect = "none"
+        document.getElementById("LLL").style.textShadow = ""
+        document.getElementById("LLL").style.fontFamily = 'BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif;'
+        document.getElementById("LLL").innerText = "計算回数:0"
+        element = document.createElement("div")
+        element.id = "LLLL"
+        document.body.appendChild(element)
+        document.getElementById("LLLL").style.position = "fixed"
+        document.getElementById("LLLL").style.top = "60px"
+        document.getElementById("LLLL").style.left = "0px"
+        document.getElementById("LLLL").style.backgroundColor = "rgba(0,0,0,0.7)"
+        document.getElementById("LLLL").style.color = "greenyellow"
+        document.getElementById("LLLL").style.fontSize = "15pt"
+        document.getElementById("LLLL").style.zIndex = "9".repeat(999)
+        document.getElementById("LLLL").style.userSelect = "none"
+        document.getElementById("LLLL").style.textShadow = ""
+        document.getElementById("LLLL").style.fontFamily = 'BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif;'
+        document.getElementById("LLLL").innerText = "zoom:0"
+    </script>
+</body>
+
+</html>
